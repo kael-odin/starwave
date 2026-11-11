@@ -1,0 +1,22 @@
+{
+  "name": "@starwave/github",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./module.ts",
+    "./module": "./module.ts",
+    "./server": "./server.ts",
+    "./web": "./web.tsx",
+    "./shared": "./shared.ts",
+    "./backend/*": "./backend/*.ts",
+    "./web/*": "./web/*"
+  },
+  "dependencies": {
+    "@aihot/backend": "*",
+    "@aihot/contracts": "*",
+    "@aihot/site": "*",
+    "@aihot/web": "*",
+    "cheerio": "1.2.0"
+  }
+}

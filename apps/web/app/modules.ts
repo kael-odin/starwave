@@ -125,6 +125,8 @@ export interface WebModule {
   };
   agent?: Part<AgentPart>;
   topicPage?: Part<TopicPagePart>;
+  /** The module's part of the home page (routes/home.tsx), between the hot topics and the feed: a component with no props that fetches its own data. */
+  home?: Part<ComponentType>;
   /** Paths of the marks it serves that are drawn in white, for a dark tile (components/BrandMark.tsx). */
   darkMarks?: string[];
   /** The starred page (routes/starred.tsx): buttons ahead of 导入文件 that bring stars in from elsewhere, each resolving to the line it reports. */

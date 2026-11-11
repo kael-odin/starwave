@@ -26,6 +26,18 @@ function extraFromEnv(value: string | undefined): Record<string, unknown> | unde
   }
 }
 
+/** Extra request headers, for providers that route by header (OpenCode Zen's x-opencode-session). */
+function headersFromEnv(value: string | undefined): Record<string, string> {
+  if (!value) return {};
+  try {
+    const parsed = JSON.parse(value) as Record<string, unknown>;
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("not an object");
+    return Object.fromEntries(Object.entries(parsed).filter((entry): entry is [string, string] => typeof entry[1] === "string"));
+  } catch {
+    throw new Error("LLM_EXTRA_HEADERS must be a JSON object of string values, e.g. {\"x-opencode-session\": \"starwave\"}");
+  }
+}
+
 function reasoningTokensFromEnv(value: string | undefined): number | undefined {
   if (!value) return undefined;
   if (!/^\d+$/.test(value)) throw new Error("LLM_REASONING_TOKENS must be a non-negative integer, e.g. 4000");
@@ -185,6 +197,7 @@ async function chatOnce<S extends z.ZodType>(opts: ChatJsonOptions<S>, circuit =
     ...(spec.jsonMode && opts.json !== false ? { response_format: { type: "json_object" } } : {}),
     ...(spec.extra ?? {}),
   };
+  const extraHeaders = headersFromEnv(process.env.LLM_EXTRA_HEADERS);
 
   const receipt = await paidRequest(
     { ...request, fallbackFor },
@@ -195,7 +208,7 @@ async function chatOnce<S extends z.ZodType>(opts: ChatJsonOptions<S>, circuit =
       try {
         res = await fetch(`${baseUrl.replace(/\/$/, "")}/chat/completions`, {
           method: "POST",
-          headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}` },
+          headers: { "content-type": "application/json", authorization: `Bearer ${apiKey}`, ...extraHeaders },
           body: JSON.stringify(body),
           signal: AbortSignal.timeout(timeoutMs),
         });

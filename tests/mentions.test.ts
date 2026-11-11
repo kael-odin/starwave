@@ -32,7 +32,7 @@ async function article(title: string, summary: string) {
     bodyText: "Fixture body", bodyHtml: "<p>Fixture body</p>", bodyStatus: "ok", via: "fetch", publishedAt: at });
   await sql`UPDATE articles SET grouping_status = 'complete' WHERE id = ${articleId}`;
   await sql`INSERT INTO analyses (article_id, input_revision, origin, relevance, category, title_zh, summary_zh, score, selected)
-    VALUES (${articleId}, 1, 'rule', 'pass', 'industry', ${title}, ${summary}, 90, true)`;
+    VALUES (${articleId}, 1, 'rule', 'pass', 'community', ${title}, ${summary}, 90, true)`;
   await publishArticle(articleId, { releasedAt: at });
   return articleId;
 }

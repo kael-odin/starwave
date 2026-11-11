@@ -37,7 +37,11 @@ function hostOf(url: URL): string {
 function proxied(url: URL, route: EgressRoute, privateHosts: readonly string[]): boolean {
   if (route !== "egress" || !config.egressProxyUrl) return false;
   const host = hostOf(url);
-  return net.isIP(host) === 0 && !privateHosts.includes(host) && !host.endsWith(".cn") && !host.endsWith(".local") && !DEPLOYMENT.directFetchHosts.includes(host);
+  // A local proxy in TUN/fake-IP mode answers the system resolver with private addresses; EGRESS_PROXY_ALL
+  // sends .cn names through the proxy too, so DNS is resolved through it instead of the fake-IP resolver.
+  const proxyAll = process.env.EGRESS_PROXY_ALL === "true";
+  return net.isIP(host) === 0 && !privateHosts.includes(host) && !host.endsWith(".local")
+    && (proxyAll || !host.endsWith(".cn")) && !DEPLOYMENT.directFetchHosts.includes(host);
 }
 
 // Per-edition limits are optional; missing hosts keep the runtime default (normally 16 KiB).

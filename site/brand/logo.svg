@@ -1,1 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="116" fill="#13191c"/><path d="M256 92C271 199 313 241 420 256C313 271 271 313 256 420C241 313 199 271 92 256C199 241 241 199 256 92Z" fill="#2ce2e8"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="星潮 Starwave">
+  <rect width="512" height="512" rx="116" fill="#0e6e68"/>
+  <path d="M72 360c72 0 94-144 196-144s118 96 212 96" fill="none" stroke="#f7f5ef" stroke-width="44" stroke-linecap="round"/>
+  <path d="M356 76l28 74 74 28-74 28-28 74-28-74-74-28 74-28z" fill="#f2c14e"/>
+</svg>

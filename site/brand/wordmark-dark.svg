@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 160" role="img" aria-label="星潮 STARWAVE">
+  <g transform="translate(8 20)">
+    <path d="M8 104c18 0 24-40 50-40s30 26 54 26" fill="none" stroke="#2dd4bf" stroke-width="12" stroke-linecap="round"/>
+    <path d="M80 8l7 19 19 7-19 7-7 19-7-19-19-7 19-7z" fill="#f2c14e"/>
+  </g>
+  <text x="148" y="86" font-family="PingFang SC, HarmonyOS Sans SC, Microsoft YaHei, system-ui, sans-serif" font-size="68" font-weight="900" letter-spacing="-2" fill="#f7f5ef">星潮</text>
+  <text x="152" y="126" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="19" font-weight="600" letter-spacing="6" fill="#2dd4bf">STARWAVE</text>
+</svg>

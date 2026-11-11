@@ -1,11 +1,20 @@
 // 站点的字标和圆环标记：页面用 Wordmark 画站名（size 是高度，单位像素），RingMark 是小标记，转起来就是加载动画。
-// 这里用站名排字；有自己的 Logo 时，把 Wordmark 换成你的 SVG（保持同样的参数）。
+// 图形是“潮线 + 星标”：一条向右上扬的浪，波峰处嵌一枚四角星。
 import { SITE } from "../site.ts";
+
+export function StarMark({ className = "", size = 24, title }: { className?: string; size?: number; title?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} className={className} aria-hidden={title ? undefined : true} role={title ? "img" : undefined} aria-label={title}>
+      <path d="M3 17.5c3.2 0 4.2-6 8.5-6s5.3 4 9.5 4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+      <path d="M16.5 3l1.3 3.4 3.4 1.3-3.4 1.3L16.5 12l-1.3-3.4-3.4-1.3 3.4-1.3z" className="fill-amber" />
+    </svg>
+  );
+}
 
 export function Wordmark({ size = 24, className = "", title = SITE.name }: { size?: number; className?: string; title?: string }) {
   return (
     <span className={`inline-flex items-center font-black leading-none tracking-[-0.03em] ${className}`} style={{ fontSize: Math.round(size * 0.92) }} aria-label={title} role="img">
-      <span aria-hidden="true" className="mr-[0.3em] inline-block size-[0.42em] rounded-full bg-accent" />
+      <StarMark size={Math.round(size * 0.56)} className="mr-[0.26em] shrink-0 overflow-visible" />
       <span aria-hidden="true">{SITE.name}</span>
     </span>
   );

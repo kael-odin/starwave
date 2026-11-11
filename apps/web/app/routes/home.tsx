@@ -9,6 +9,7 @@ import { inNav } from "../components/shell/nav";
 import type { Screen } from "../components/shell/screens";
 import { Timeline } from "../features/feed/Timeline";
 import { HotTopics } from "../features/feed/HotTopics";
+import { HOME_PARTS } from "../features/home/module-parts";
 import { ActiveFilters, CategoryTabs, FeedBar, SearchField } from "../features/feed/Filters";
 
 export const handle: Screen = { tab: "featured", name: "精选" };
@@ -53,6 +54,8 @@ export default function Home() {
       </div>
 
       {data.hot && inNav("/hot") && <HotTopics entries={data.hot} />}
+
+      {HOME_PARTS.map((Part, i) => <Part key={i} />)}
 
       <Timeline initial={data} filters={data.filters} />
     </div>

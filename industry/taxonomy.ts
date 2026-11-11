@@ -1,155 +1,240 @@
-// 这个行业的分类体系：类别、标签词表、公司（主体）名录，以及防止张冠李戴的身份词典。
-// 模型按这里的词表打标签，主题页（topics.json）按标签归类，筛选栏按类别分组。
-// 换行业时：类别的 key 会出现在网址里（/all?category=…），上线后就不要再改；标签和名录可以随时增减。
+// 星潮 Starwave 的行业包：开源项目的分类体系、标签词表、组织名录和身份词典。
+// 模型按这里的词表打标签，主题页按标签归类，筛选栏按类别分组。
+// 换行业时：类别的 key 会出现在网址里（/all?category=…），上线后就不要再改。
 
 /**
  * 网页上的类别（筛选栏、卡片角标、RSS 分类订阅）。key 是网址和接口里的身份，上线后不要改。
- * section 是日报里的分节标题（几个类别可以共用一节，按这里的顺序排）；guide 告诉结构抽取模型这一类收什么、
- * 和相邻类别的边界在哪（总的归类原则写在 prompts/structure.md 里）。
- * commentary 标出评论类（教程、观点）：日报写过的事又有评论类的后续报道，只占一行快讯（报道它的信源够多时除外）。
- * 没归上类的资料在日报里放进第一个 key 为 industry 的类别所在的节（没有就放最后一节）。
- * tagColor 是飞书推送卡片里跟在标题后面的这一类小标签的颜色（飞书 text_tag 的颜色名）。
- * feedLabel 是分类 RSS 标题里的名字（不写就用 label）。公开接口、RSS 和 MCP 里要把一类并进另一类发布，写在站点设置里（site/site.ts 的 PUBLIC_CATEGORIES）。
+ * section 是日报里的分节标题；guide 告诉结构抽取模型这一类收什么、和相邻类别的边界在哪。
+ * commentary 标出评论类（观点、复盘）：日报写过的事又有评论类后续报道时，只占一行快讯。
+ * tagColor 是飞书推送卡片里跟在标题后面的小标签颜色。
  */
 export const CATEGORIES = [
-  { key: "ai-models", tagColor: "indigo", label: "模型", feedLabel: "AI 模型", section: "模型发布/更新", guide: "模型本身的发布、版本、权重开放、能力或价格变化，以及既有榜单上的模型成绩。公布一次跑分不是发布新基准，也不是教程。" },
-  { key: "ai-products", tagColor: "turquoise", label: "产品", feedLabel: "AI 产品", section: "产品发布/更新", guide: "可使用的 AI 产品、功能、应用、工具、API、平台和工程组件的发布更新。模型厂商发布的推理框架、算子库、硬件适配组件仍是产品，不能因为厂商名归成模型。" },
-  { key: "industry", tagColor: "orange", label: "行业", feedLabel: "行业动态", section: "行业动态", guide: "已发生的公司经营、融资并购、人事、合作、诉讼、政策、真实安全事故及调查进展。新闻由当事人发帖、带有态度，也不因此变成观点。" },
-  { key: "paper", tagColor: "violet", label: "论文", feedLabel: "论文", section: "论文研究", guide: "以新研究方法、实验设计与发现为核心的论文、技术报告、新基准或研究数据集。系统性红队实验属于研究；既有榜单成绩归模型，真实事故的新闻调查归行业。" },
-  { key: "tip", tagColor: "green", label: "教程", section: "技巧与观点", guide: "读者可以照着使用的方法、提示词、工具用法、工程实践复盘与技术讲解。重点是可复用的做法；单纯发布工具归产品，只有态度和预测而无做法归观点。", commentary: true },
-  { key: "opinion", tagColor: "purple", label: "观点", section: "技巧与观点", guide: "重点是作者的解释、判断、主张、预测、评论或访谈观点。讨论市场不自动归行业，作者是名人不自动归观点。", commentary: true },
+  {
+    key: "new-release",
+    tagColor: "indigo",
+    label: "新项目",
+    feedLabel: "新项目与发布",
+    section: "新项目与发布",
+    guide: "新仓库、首次公开发布、重大版本、breaking change、从闭源转为开源。常规小版本、只改文档或依赖升级不算。",
+  },
+  {
+    key: "dev-tool",
+    tagColor: "turquoise",
+    label: "开发工具",
+    feedLabel: "开发工具",
+    section: "工具与基础设施",
+    guide: "读者用来写代码、调试、部署、管理项目的工具：CLI、编辑器、IDE、终端、SDK、构建工具、效率工具、插件。产品本身是闭源的开发工具也收，但优先开源。",
+  },
+  {
+    key: "ai-oss",
+    tagColor: "violet",
+    label: "AI 开源",
+    feedLabel: "AI 开源",
+    section: "AI 开源",
+    guide: "开放权重、推理/训练代码、Agent 框架、RAG、多模态、MCP、本地模型运行、评测工具。闭源模型发布、纯跑分、纯 API 价格变化不收。",
+  },
+  {
+    key: "infra",
+    tagColor: "orange",
+    label: "基础设施",
+    feedLabel: "基础设施",
+    section: "工具与基础设施",
+    guide: "数据库、运行时、容器、云原生、DevOps、可观测性、消息队列、存储引擎、网络与代理。公司融资归社区与商业，不归这里。",
+  },
+  {
+    key: "web-design",
+    tagColor: "green",
+    label: "前端与设计",
+    feedLabel: "前端与设计",
+    section: "工具与基础设施",
+    guide: "前端框架、UI 库、设计工具、低代码、图形/可视化、字体与图标、跨端框架。后端 API 和数据库不归这里。",
+  },
+  {
+    key: "data",
+    tagColor: "blue",
+    label: "数据与存储",
+    feedLabel: "数据与存储",
+    section: "工具与基础设施",
+    guide: "数据工具、分析、ETL、向量库、数据集、存储格式、备份恢复、数据可视化。数据库引擎本身归基础设施。",
+  },
+  {
+    key: "security",
+    tagColor: "red",
+    label: "安全与供应链",
+    feedLabel: "安全与供应链",
+    section: "安全与供应链",
+    guide: "漏洞、SBOM、依赖安全、许可证风险、供应链攻击、隐私工具、密钥管理。泛安全观点归观点与复盘。",
+  },
+  {
+    key: "community",
+    tagColor: "yellow",
+    label: "社区与商业",
+    feedLabel: "社区与商业",
+    section: "社区与商业",
+    guide: "维护者故事、治理、基金会、融资并购、许可证变更、公司开源战略、人事变动、社区争议。产品发布归新项目或开发工具。",
+  },
+  {
+    key: "opinion",
+    tagColor: "purple",
+    label: "观点与复盘",
+    feedLabel: "观点与复盘",
+    section: "观点与复盘",
+    guide: "作者的解释、判断、预测、访谈、工程复盘、开源生态评论。重点是观点和可迁移经验，不是转述新闻。",
+    commentary: true,
+  },
 ] as const satisfies ReadonlyArray<{ key: string; tagColor: string; label: string; feedLabel?: string; section: string; guide: string; commentary?: true }>;
 
 /**
- * 这个行业最受关注的一类发布（AI 行业是新模型）：日报报头的“N 个新模型”、改分类后修订已出的报告都按它数。
- * category 是类别，tag 是标签，两者都对上才算；unit 接在数字后面。
- * 没有这样一类的行业设成 null，报头就不显示这个数。
+ * 最受关注的一类发布：日报报头的“N 个新项目”按它数。
  */
-export const RELEASE: { category: string; tag: string; unit: string } | null = { category: "ai-models", tag: "模型发布", unit: "个新模型" };
+export const RELEASE: { category: string; tag: string; unit: string } | null = { category: "new-release", tag: "新项目", unit: "个新项目" };
 
 /** 周报月报的总述可以直接写、不必在报道里找到出处的行业通用词（小写）。站名会自动算进去。 */
-export const PLAIN_TERMS: readonly string[] = ["ai", "api", "llm", "gpu", "agi", "ceo", "ipo"];
+export const PLAIN_TERMS: readonly string[] = ["github", "git", "gitlab", "api", "cli", "sdk", "ide", "oss", "pr", "ci", "cd", "json", "yaml", "sql", "http", "https", "wasm", "gpu", "cpu", "ui", "ux", "db", "mcp", "repo"];
 
 /**
- * 内容理解一步给每篇资料判的“内容类型”（写在 prompts/content-understanding.md 里，改了类型要同步改那份提示词）。
- * 评分提示词（prompts/selection-score.md）按类型给五个维度不同的权重。
+ * 内容理解一步给每篇资料判的“内容类型”。评分提示词按类型给五个维度不同的权重。
  */
-export const ITEM_TYPES = ["model_release", "product_launch", "tool_or_prompt", "research_paper", "industry_event", "opinion_analysis", "tutorial_explainer"] as const;
+export const ITEM_TYPES = ["new_repo", "release", "dev_tool", "ai_tool", "infra", "security_event", "community_event", "opinion_analysis", "tutorial_explainer", "benchmark"] as const;
 
 // ── 标签词表 ────────────────────────────────────────────────────────────────────────────
 
 /** 每篇资料的第一个标签必须是这些“分类标签”之一。 */
 export const CATEGORY_TAGS = [
-  "产品更新", "模型发布", "论文/研究", "开源/仓库", "教程/实践", "现象/趋势", "大佬观点", "评测/基准", "安全/对齐", "行业动态", "政策/监管",
-  "非AI/通用工具", "其他",
+  "新项目", "版本发布", "开发工具", "AI 工具", "基础设施", "前端/设计", "数据/存储", "安全/供应链",
+  "社区/商业", "观点/复盘", "教程/实践", "评测/基准", "其他",
 ] as const;
 
 /** 可选的主题标签。 */
 export const TOPIC_TAGS = [
-  "Agent", "编码", "推理", "多模态", "语音", "视频", "图像生成", "RAG", "端侧", "数据/训练", "搜索", "部署/工程", "开源生态", "具身智能", "MCP/工具调用",
+  "Agent", "MCP", "RAG", "推理", "本地优先", "自托管", "CLI", "编辑器", "终端", "插件", "跨平台",
+  "自动化", "数据库", "容器", "可观测性", "设计工具", "低代码", "供应链", "性能", "开发者体验", "中文文档",
 ] as const;
 
-/** 可选的实体标签（公司、机构、平台）。 */
-export const ENTITY_TAGS = ["OpenAI", "Anthropic", "DeepSeek", "DeepMind", "Google", "Meta", "Microsoft", "xAI", "Hugging Face", "GitHub", "arXiv"] as const;
+/** 可选的实体标签（组织、基金会、平台）。 */
+export const ENTITY_TAGS = [
+  "GitHub", "GitLab", "Hugging Face", "OpenAI", "Anthropic", "Microsoft", "Google", "Meta", "Vercel", "Cloudflare", "Supabase",
+  "Ollama", "n8n", "JetBrains", "Mozilla", "Canonical", "Red Hat", "CNCF", "Apache", "Linux Foundation",
+  "Rust Foundation", "Deno", "Zed", "Neovim", "Node.js", "Python",
+] as const;
 
 /** 模型常写的近义词，统一成词表里的写法。 */
 export const TAG_SYNONYMS: Readonly<Record<string, string>> = {
-  "教程/玩法": "教程/实践", "技巧/最佳实践": "教程/实践", "合作/生态": "行业动态", "融资/收购": "行业动态", "公司动态": "行业动态",
-  合作: "行业动态", 生态: "行业动态", 融资: "行业动态", 收购: "行业动态", 投资: "行业动态", 并购: "行业动态",
-  政策: "政策/监管", 监管: "政策/监管", 法规: "政策/监管", 安全: "安全/对齐", 对齐: "安全/对齐",
-  论文: "论文/研究", 研究: "论文/研究", paper: "论文/研究", papers: "论文/研究",
-  "open-source": "开源/仓库", 开源: "开源/仓库", 仓库: "开源/仓库", repo: "开源/仓库",
-  教程: "教程/实践", 玩法: "教程/实践", 指南: "教程/实践", 技巧: "教程/实践", 最佳实践: "教程/实践", 实践: "教程/实践",
-  产品: "产品更新", 更新: "产品更新", 发布: "模型发布", 模型: "模型发布", 趋势: "现象/趋势", 现象: "现象/趋势", 观点: "大佬观点",
-  视频生成: "视频", 非ai: "非AI/通用工具", "non-ai": "非AI/通用工具", 通用工具: "非AI/通用工具", 工程工具: "非AI/通用工具",
-  安全扫描: "非AI/通用工具", devops: "非AI/通用工具", 行业: "行业动态", 动态: "行业动态",
+  开源: "新项目", 仓库: "新项目", repo: "新项目", repos: "新项目", "open-source": "新项目", opensource: "新项目",
+  发布: "版本发布", release: "版本发布", 版本: "版本发布", breaking: "版本发布",
+  工具: "开发工具", "developer tool": "开发工具", devtool: "开发工具", ide: "开发工具", sdk: "开发工具",
+  ai: "AI 工具", 模型: "AI 工具", llm: "AI 工具",
+  基础设施: "基础设施", infra: "基础设施", devops: "基础设施", 云原生: "基础设施", kubernetes: "基础设施", k8s: "基础设施",
+  前端: "前端/设计", 设计: "前端/设计", ui: "前端/设计", css: "前端/设计", react: "前端/设计",
+  数据: "数据/存储", 存储: "数据/存储", database: "数据/存储", db: "数据/存储", etl: "数据/存储",
+  安全: "安全/供应链", security: "安全/供应链", 供应链: "安全/供应链", license: "安全/供应链", 许可证: "安全/供应链", sbom: "安全/供应链",
+  融资: "社区/商业", funding: "社区/商业", 收购: "社区/商业", acquisition: "社区/商业", 治理: "社区/商业", governance: "社区/商业", 基金会: "社区/商业",
+  教程: "教程/实践", tutorial: "教程/实践", 指南: "教程/实践", guide: "教程/实践", 实践: "教程/实践",
+  观点: "观点/复盘", opinion: "观点/复盘", 复盘: "观点/复盘", retrospective: "观点/复盘", 趋势: "观点/复盘",
+  评测: "评测/基准", benchmark: "评测/基准", 基准: "评测/基准",
+  "non-ai": "其他", 其他工具: "其他",
 };
 
-// ── 公司与主体 ──────────────────────────────────────────────────────────────────────────
+// ── 组织与主体 ──────────────────────────────────────────────────────────────────────────
 
 /**
- * 公司主题：id → 显示名、卡片上显示的标签（null 表示只用 entity:<id> 归类）、别名。
- * aliases 给结构抽取模型看；orgNames 是这家公司发消息时开头用的组织名（公司、实验室、团队），
- * 在它自己的主题页上读者知道说的是谁，可以省去；otherNames 是公司的其他称呼（官方账号名、子品牌）。
- * 所有这些名字都用来认出说的是哪家公司，比如把事实的主体对到发布方。
+ * 组织主题：id → 显示名、卡片上显示的标签（null 表示只用 entity:<id> 归类）、别名。
+ * aliases 给结构抽取模型看；orgNames 是组织发消息时开头用的名字；otherNames 是其他称呼。
  */
 export const ENTITIES: Record<string, { name: string; displayTag: string | null; aliases: string[]; orgNames?: string[]; otherNames?: string[] }> = {
-  "world-labs": { name: "World Labs", displayTag: null, aliases: ["World Labs"] },
-  "thinking-machines": { name: "Thinking Machines Lab", displayTag: null, aliases: ["Thinking Machines"] },
-  amd: { name: "AMD", displayTag: null, aliases: ["AMD", "Advanced Micro Devices"] },
-  openai: { name: "OpenAI", displayTag: "OpenAI", aliases: ["OpenAI", "ChatGPT", "Sora", "Codex", "GPT"], orgNames: ["OpenAI"], otherNames: ["OpenAI Developers"] },
-  anthropic: { name: "Anthropic", displayTag: "Anthropic", aliases: ["Anthropic", "Claude"], orgNames: ["Anthropic"], otherNames: ["Claude Code"] },
-  google: { name: "Google", displayTag: "Google", aliases: ["Google", "DeepMind", "Gemini", "谷歌"], orgNames: ["Google DeepMind", "Google Research", "Google", "DeepMind", "谷歌"], otherNames: ["Google AI", "Google Labs", "Google Cloud"] },
-  deepseek: { name: "DeepSeek", displayTag: "DeepSeek", aliases: ["DeepSeek", "深度求索"], orgNames: ["DeepSeek", "深度求索"] },
-  qwen: { name: "千问 Qwen", displayTag: null, aliases: ["Qwen", "通义", "阿里"], orgNames: ["通义千问", "通义实验室", "阿里巴巴", "阿里云", "阿里", "Qwen Team", "Qwen", "Alibaba"], otherNames: ["千问", "千问APP", "Alibaba Cloud"] },
-  kimi: { name: "月之暗面 / Kimi", displayTag: null, aliases: ["Kimi", "月之暗面", "Moonshot", "Kimi / 月之暗面"], orgNames: ["Moonshot AI", "月之暗面", "Kimi"] },
-  minimax: { name: "MiniMax", displayTag: null, aliases: ["MiniMax", "海螺"], orgNames: ["MiniMax", "稀宇科技"] },
-  zhipu: { name: "智谱 GLM", displayTag: null, aliases: ["智谱", "GLM", "Z.ai"], orgNames: ["智谱AI", "智谱", "Zhipu AI", "Z.ai"], otherNames: ["Zhipu"] },
-  xai: { name: "xAI", displayTag: "xAI", aliases: ["xAI", "Grok"], orgNames: ["SpaceX Super Intelligence", "SpaceXAI", "SpaceXSI", "xAI"], otherNames: ["Grok Bot"] },
-  meta: { name: "Meta", displayTag: "Meta", aliases: ["Meta", "Llama"], orgNames: ["Meta Superintelligence Labs", "Meta AI", "Meta"], otherNames: ["AI at Meta", "Muse"] },
-  microsoft: { name: "Microsoft", displayTag: "Microsoft", aliases: ["Microsoft", "微软", "Copilot"], orgNames: ["Microsoft Research", "Microsoft AI", "Microsoft", "微软"] },
-  nvidia: { name: "NVIDIA", displayTag: null, aliases: ["NVIDIA", "英伟达"], orgNames: ["NVIDIA", "英伟达"] },
-  "hugging-face": { name: "Hugging Face", displayTag: "Hugging Face", aliases: ["Hugging Face"], orgNames: ["Hugging Face", "HuggingFace"] },
-  cursor: { name: "Cursor", displayTag: null, aliases: ["Cursor", "Anysphere"], orgNames: ["Cursor"] },
-  openrouter: { name: "OpenRouter", displayTag: null, aliases: ["OpenRouter"], orgNames: ["OpenRouter"] },
+  github: { name: "GitHub", displayTag: "GitHub", aliases: ["GitHub", "GitHub Inc.", "github.com"], orgNames: ["GitHub"], otherNames: ["GitHub Blog", "GitHub Changelog", "GitHub Engineering"] },
+  gitlab: { name: "GitLab", displayTag: "GitLab", aliases: ["GitLab", "GitLab Inc."], orgNames: ["GitLab"], otherNames: ["GitLab Blog"] },
+  openai: { name: "OpenAI", displayTag: "OpenAI", aliases: ["OpenAI", "ChatGPT", "Codex", "OpenAI Cookbook"], orgNames: ["OpenAI"], otherNames: ["OpenAI Developers"] },
+  anthropic: { name: "Anthropic", displayTag: "Anthropic", aliases: ["Anthropic", "Claude", "Claude Code", "Anthropic Cookbook"], orgNames: ["Anthropic"], otherNames: ["Anthropic Engineering"] },
+  "hugging-face": { name: "Hugging Face", displayTag: "Hugging Face", aliases: ["Hugging Face", "HuggingFace", "HF"], orgNames: ["Hugging Face"], otherNames: ["HF Blog"] },
+  microsoft: { name: "Microsoft", displayTag: "Microsoft", aliases: ["Microsoft", "微软", "GitHub Copilot", "VS Code", "Visual Studio Code"], orgNames: ["Microsoft", "微软"], otherNames: ["Microsoft Research", "Microsoft Open Source"] },
+  google: { name: "Google", displayTag: "Google", aliases: ["Google", "谷歌", "Google Open Source", "Chromium"], orgNames: ["Google", "谷歌"], otherNames: ["Google Developers", "Google Open Source Blog"] },
+  meta: { name: "Meta", displayTag: "Meta", aliases: ["Meta", "Facebook", "React", "PyTorch"], orgNames: ["Meta", "Facebook"], otherNames: ["Meta Open Source"] },
+  vercel: { name: "Vercel", displayTag: "Vercel", aliases: ["Vercel", "Next.js"], orgNames: ["Vercel"], otherNames: ["Vercel Blog"] },
+  cloudflare: { name: "Cloudflare", displayTag: "Cloudflare", aliases: ["Cloudflare", "Cloudflare Workers"], orgNames: ["Cloudflare"], otherNames: ["Cloudflare Blog"] },
+  supabase: { name: "Supabase", displayTag: "Supabase", aliases: ["Supabase"], orgNames: ["Supabase"], otherNames: [] },
+  ollama: { name: "Ollama", displayTag: "Ollama", aliases: ["Ollama"], orgNames: ["Ollama"], otherNames: [] },
+  n8n: { name: "n8n", displayTag: "n8n", aliases: ["n8n"], orgNames: ["n8n"], otherNames: [] },
+  jetbrains: { name: "JetBrains", displayTag: "JetBrains", aliases: ["JetBrains", "IntelliJ", "Kotlin"], orgNames: ["JetBrains"], otherNames: ["JetBrains Blog"] },
+  mozilla: { name: "Mozilla", displayTag: "Mozilla", aliases: ["Mozilla", "Firefox"], orgNames: ["Mozilla"], otherNames: ["Mozilla Blog"] },
+  canonical: { name: "Canonical", displayTag: "Canonical", aliases: ["Canonical", "Ubuntu"], orgNames: ["Canonical"], otherNames: [] },
+  "red-hat": { name: "Red Hat", displayTag: "Red Hat", aliases: ["Red Hat", "红帽"], orgNames: ["Red Hat", "红帽"], otherNames: [] },
+  cncf: { name: "CNCF", displayTag: "CNCF", aliases: ["CNCF", "Cloud Native Computing Foundation", "云原生计算基金会"], orgNames: ["CNCF"], otherNames: [] },
+  apache: { name: "Apache", displayTag: "Apache", aliases: ["Apache", "Apache Software Foundation", "ASF"], orgNames: ["Apache Software Foundation", "ASF", "Apache"], otherNames: [] },
+  "linux-foundation": { name: "Linux Foundation", displayTag: "Linux Foundation", aliases: ["Linux Foundation", "Linux 基金会", "Linus Torvalds"], orgNames: ["Linux Foundation", "Linux 基金会"], otherNames: [] },
+  "rust-foundation": { name: "Rust Foundation", displayTag: "Rust Foundation", aliases: ["Rust Foundation", "Rust"], orgNames: ["Rust Foundation", "Rust Project"], otherNames: ["Rust Blog"] },
+  denoland: { name: "Deno", displayTag: "Deno", aliases: ["Deno", "Deno Land"], orgNames: ["Deno"], otherNames: ["Deno Blog"] },
+  "zed-industries": { name: "Zed", displayTag: "Zed", aliases: ["Zed", "Zed Industries"], orgNames: ["Zed", "Zed Industries"], otherNames: ["Zed Blog"] },
+  neovim: { name: "Neovim", displayTag: "Neovim", aliases: ["Neovim", "nvim"], orgNames: ["Neovim"], otherNames: [] },
+  nodejs: { name: "Node.js", displayTag: "Node.js", aliases: ["Node.js", "Node", "Nodejs"], orgNames: ["Node.js", "Node.js Foundation"], otherNames: ["Node.js Blog"] },
+  python: { name: "Python", displayTag: "Python", aliases: ["Python", "Python Software Foundation", "PSF", "CPython"], orgNames: ["Python Software Foundation", "PSF", "Python"], otherNames: ["Python Insider"] },
 };
 
 /**
- * 身份词典：摘要和标题里出现的公司，必须在原文里也出现过，否则退回原标题、丢掉摘要（防止模型张冠李戴）。
- * 行业没有这个问题时可以留空数组。
+ * 身份词典：摘要和标题里出现的组织，必须在原文里也出现过，否则退回原标题、丢掉摘要（防止张冠李戴）。
+ * 开源站主要防“把 A 项目的发布写成 B 组织”的情况。
  */
 export const IDENTITY_LEXICON: ReadonlyArray<{ id: string; name: string; patterns: RegExp[] }> = [
-  { id: "openai", name: "OpenAI", patterns: [/openai|chatgpt|\bgpt-?[o\d]|\bsora\b|\bcodex\b/i] },
-  { id: "anthropic", name: "Anthropic", patterns: [/anthropic|\bclaude\b/i, /\b(?:opus|sonnet|haiku)\s*\d+(?:[.\-]\d+)*\b/i, /\bfable\s*\d+(?:[.\-]\d+)*\b|\bmythos\b/i] },
-  { id: "google", name: "Google / Gemini", patterns: [/google|deepmind|\bgemini\b|notebooklm|\bveo\s?\d|\bAlphaFold\b|\bAMIE\b/i] },
-  { id: "deepseek", name: "DeepSeek", patterns: [/deepseek|深度求索/i] },
-  { id: "xai", name: "xAI / Grok", patterns: [/\bxai\b|\bgrok\b/i] },
-  { id: "meta", name: "Meta / Llama", patterns: [/\bMeta\b/, /\bmeta\s?ai\b|\bllama\b/i] },
-  { id: "microsoft", name: "Microsoft / Copilot", patterns: [/microsoft|copilot|微软/i] },
-  { id: "nvidia", name: "NVIDIA", patterns: [/nvidia|英伟达|\bnemotron\b|\bnemo\b|\bblackwell\b|\brubin(?:\s+ultra)?\b|\bcuda\b/i] },
-  { id: "qwen", name: "千问 Qwen", patterns: [/\bqwen|通义|千问/i] },
-  { id: "hugging-face", name: "Hugging Face", patterns: [/hugging\s?face/i] },
-  { id: "cursor", name: "Cursor", patterns: [/\bCursor\b/] },
-  { id: "kimi", name: "月之暗面 / Kimi", patterns: [/\bkimi\b|月之暗面|\bmoonshot\s?ai\b/i] },
-  { id: "openrouter", name: "OpenRouter", patterns: [/openrouter/i] },
-  { id: "minimax", name: "MiniMax", patterns: [/minimax/i] },
-  { id: "zhipu", name: "智谱 GLM", patterns: [/智谱|\bglm-?[4-9]/i] },
-  { id: "hunyuan", name: "腾讯混元", patterns: [/混元|hunyuan/i] },
-  { id: "doubao", name: "字节豆包", patterns: [/豆包|doubao|字节跳动|bytedance/i] },
-  { id: "mistral", name: "Mistral", patterns: [/mistral/i] },
-  { id: "perplexity", name: "Perplexity", patterns: [/\bPerplexity\b/] },
-  { id: "runway", name: "Runway", patterns: [/\brunway\b/i] },
-  { id: "suno", name: "Suno", patterns: [/\bsuno\b/i] },
-  { id: "midjourney", name: "Midjourney", patterns: [/midjourney/i] },
-  { id: "stability-ai", name: "Stability AI", patterns: [/stability\s?ai/i] },
-  { id: "elevenlabs", name: "ElevenLabs", patterns: [/eleven\s?labs/i] },
-  { id: "vllm", name: "vLLM", patterns: [/\bvllm\b/i] },
+  { id: "github", name: "GitHub", patterns: [/github|github\.blog/i] },
+  { id: "gitlab", name: "GitLab", patterns: [/gitlab/i] },
+  { id: "openai", name: "OpenAI", patterns: [/openai|chatgpt|\bcodex\b/i] },
+  { id: "anthropic", name: "Anthropic", patterns: [/anthropic|\bclaude\b/i] },
+  { id: "hugging-face", name: "Hugging Face", patterns: [/hugging\s?face|\bhf\b/i] },
+  { id: "microsoft", name: "Microsoft", patterns: [/microsoft|微软|github copilot|vs code|visual studio code/i] },
+  { id: "google", name: "Google", patterns: [/google|谷歌|chromium/i] },
+  { id: "meta", name: "Meta", patterns: [/\bmeta\b|facebook|\breact\b|pytorch/i] },
+  { id: "vercel", name: "Vercel", patterns: [/vercel|next\.js/i] },
+  { id: "cloudflare", name: "Cloudflare", patterns: [/cloudflare/i] },
+  { id: "supabase", name: "Supabase", patterns: [/supabase/i] },
   { id: "ollama", name: "Ollama", patterns: [/\bollama\b/i] },
-  { id: "windsurf", name: "Windsurf", patterns: [/windsurf/i] },
-  { id: "devin", name: "Devin", patterns: [/\bdevin\b/i] },
-  { id: "manus", name: "Manus", patterns: [/\bmanus\b/i] },
-  { id: "apple", name: "Apple AI", patterns: [/\bapple\s?(intelligence|silicon|ai)\b|苹果(智能|\s?AI)/i] },
-  { id: "amazon", name: "Amazon / AWS", patterns: [/amazon|\baws\b|亚马逊/i] },
-  { id: "baidu", name: "百度文心", patterns: [/百度|baidu|文心|\bernie\s?bot\b/i] },
+  { id: "n8n", name: "n8n", patterns: [/\bn8n\b/i] },
+  { id: "jetbrains", name: "JetBrains", patterns: [/jetbrains|intellij|kotlin/i] },
+  { id: "mozilla", name: "Mozilla", patterns: [/mozilla|firefox/i] },
+  { id: "canonical", name: "Canonical", patterns: [/canonical|ubuntu/i] },
+  { id: "red-hat", name: "Red Hat", patterns: [/red\s?hat|红帽/i] },
+  { id: "cncf", name: "CNCF", patterns: [/\bcncf\b|cloud native computing foundation|云原生计算基金会/i] },
+  { id: "apache", name: "Apache", patterns: [/apache|\basf\b/i] },
+  { id: "linux-foundation", name: "Linux Foundation", patterns: [/linux foundation|linux 基金会/i] },
+  { id: "rust-foundation", name: "Rust Foundation", patterns: [/rust foundation|rust project|\brust\b/i] },
+  { id: "denoland", name: "Deno", patterns: [/\bdeno\b/i] },
+  { id: "zed-industries", name: "Zed", patterns: [/\bzed\b/i] },
+  { id: "neovim", name: "Neovim", patterns: [/\bneovim\b|\bnvim\b/i] },
+  { id: "nodejs", name: "Node.js", patterns: [/node\.?js/i] },
+  { id: "python", name: "Python", patterns: [/python|\bpsf\b|cpython/i] },
 ];
 
-/** 这些域名上的文章，发布方就是对应的公司（托管平台如 GitHub、arXiv 不算）。 */
+/** 这些域名上的文章，发布方就是对应的组织（托管平台如 GitHub、arXiv 不算）。 */
 export const PUBLISHER_DOMAINS: ReadonlyArray<{ entityId: string; domains: readonly string[] }> = [
-  { entityId: "openai", domains: ["openai.com"] },
+  { entityId: "github", domains: ["github.blog"] },
+  { entityId: "gitlab", domains: ["about.gitlab.com"] },
+  { entityId: "openai", domains: ["openai.com", "cookbook.openai.com"] },
   { entityId: "anthropic", domains: ["anthropic.com", "claude.com"] },
-  { entityId: "google", domains: ["deepmind.google", "ai.google", "blog.google"] },
-  { entityId: "deepseek", domains: ["deepseek.com"] },
-  { entityId: "xai", domains: ["x.ai"] },
-  { entityId: "meta", domains: ["ai.meta.com"] },
-  { entityId: "microsoft", domains: ["microsoft.com"] },
-  { entityId: "nvidia", domains: ["nvidia.com"] },
-  { entityId: "qwen", domains: ["qwen.ai"] },
-  { entityId: "cursor", domains: ["cursor.com"] },
-  { entityId: "openrouter", domains: ["openrouter.ai"] },
+  { entityId: "hugging-face", domains: ["huggingface.co"] },
+  { entityId: "microsoft", domains: ["microsoft.com", "devblogs.microsoft.com", "code.visualstudio.com"] },
+  { entityId: "google", domains: ["opensource.google", "developers.googleblog.com", "blog.google"] },
+  { entityId: "meta", domains: ["engineering.fb.com", "ai.meta.com"] },
+  { entityId: "vercel", domains: ["vercel.com"] },
+  { entityId: "cloudflare", domains: ["blog.cloudflare.com", "cloudflare.com"] },
+  { entityId: "supabase", domains: ["supabase.com"] },
+  { entityId: "ollama", domains: ["ollama.com"] },
+  { entityId: "n8n", domains: ["n8n.io"] },
+  { entityId: "jetbrains", domains: ["jetbrains.com", "blog.jetbrains.com"] },
+  { entityId: "mozilla", domains: ["blog.mozilla.org", "hacks.mozilla.org"] },
+  { entityId: "canonical", domains: ["canonical.com", "ubuntu.com"] },
+  { entityId: "red-hat", domains: ["redhat.com"] },
+  { entityId: "cncf", domains: ["cncf.io"] },
+  { entityId: "apache", domains: ["apache.org"] },
+  { entityId: "linux-foundation", domains: ["linuxfoundation.org"] },
+  { entityId: "rust-foundation", domains: ["blog.rust-lang.org", "rust-lang.org"] },
+  { entityId: "denoland", domains: ["deno.com"] },
+  { entityId: "zed-industries", domains: ["zed.dev"] },
+  { entityId: "nodejs", domains: ["nodejs.org"] },
+  { entityId: "python", domains: ["python.org", "pythoninsider.blogspot.com"] },
 ];
 
-/** 原文里的这些写法也算提到了对应公司。 */
+/** 原文里的这些写法也算提到了对应组织。 */
 export const IDENTITY_CONTEXT_ALIASES: ReadonlyArray<{ entityId: string; pattern: RegExp }> = [
-  { entityId: "meta", pattern: /@AIatMeta\b/i },
-  { entityId: "zhipu", pattern: /\bZhipu(?:\s+AI\b|['’]s\b)/i },
+  { entityId: "github", pattern: /@github\b/i },
+  { entityId: "hugging-face", pattern: /@huggingface\b/i },
+  { entityId: "vercel", pattern: /@vercel\b/i },
 ];
